@@ -29,23 +29,25 @@
       };
       
       var bucketDropdown = $('#dateBucket').MPSelect(bucketOptions);
+      
+      var cleanDate = function(date) {
+        return date.toISOString().substring(0, date.toISOString().indexOf('T'));
+      };
 
       var runQuery = function() {
         var dateRange = dateSelect.MPDatepicker('value');
         var pickedUnit = bucketDropdown.MPSelect('value');
         
-        console.log(dateRange)
         
         var params = {
           formulas:[{"queries": [{"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"show_invite_or_pay_cta\"] == true and properties[\"is_freemail\"] == true"}, {"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"is_freemail\"] == true"}], "formula": "(A)/(B)"}],
-          from_date:dateRange.from,
-          to_date:dateRange.to,
+          from_date:cleanDate(dateRange.from),
+          to_date:cleanDate(dateRange.to),
           unit:pickedUnit
         };
 
         MP.api.query('api/2.0/formulas', params).done(function(results) {
-          console.log(results);
-          // eventGraph.MPChart('setData', results);
+          eventGraph.MPChart('setData', results);
         });
 
       };
