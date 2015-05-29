@@ -8,42 +8,30 @@
   </head>
   <body class="mixpanel-platform-body">
     <div class="mixpanel-platform-section">
-      <div id="eventSelect" style="float: left;"></div>
-      <div id="by" class="mixpanel-platform-label" style="margin-left: 10px; display: none;">by</div>
-      <div id="propSelect" style="float: left;"></div>
-      <div id="dateSelect" style="float: right;"></div>
-      <div style="clear: both;"></div>
+      <div id="dateSelect"></div>
       <div id="graph"></div>
     </div>
     <div id="table"></div>
     <script>
-      var eventSelect = $('#eventSelect').MPEventSelect();
-      var propSelect  = $('#propSelect').MPPropertySelect();
       var dateSelect  = $('#dateSelect').MPDatepicker();
       var eventGraph  = $('#graph').MPChart({chartType: 'line'});
-      var eventTable  = $('#table').MPTable({
-        showPercentages: true,
-        firstColHeader: 'Event'
-      });
 
       var runQuery = function() {
-        var eventName = eventSelect.MPEventSelect('value'),
-            propName  = propSelect.MPPropertySelect('value'),
-            dateRange = dateSelect.MPDatepicker('value');
+        var dateRange = dateSelect.MPDatepicker('value');
+        var params = {
+          formulas:[{"queries": [{"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"show_invite_or_pay_cta\"] == true and properties[\"is_freemail\"] == true"}, {"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"is_freemail\"] == true"}], "formula": "(A)/(B)"}],
+          from_date:'2015-01-16',
+          to_date:'2015-05-29',
+          unit:'day'
+        };
 
-        if (eventName) {
-          MP.api.segment(eventName, propName, dateRange).done(function(results) {
-            eventGraph.MPChart('setData', results);
-            eventTable.MPTable('setData', results);
-          });
-        }
+        MP.api.query('api/2.0/formulas', params).done(function(results) {
+          eventGraph.MPChart('setData', results);
+        });
+
       };
-      eventSelect.on('change', function(e, eventName) {
-        propSelect.MPPropertySelect('setEvent', eventName);
-        $("#by").show();
-        runQuery();
-      });
-      propSelect.on('change', runQuery);
+      
+      runQuery();
       dateSelect.on('change', runQuery);
     </script>
   </body>
