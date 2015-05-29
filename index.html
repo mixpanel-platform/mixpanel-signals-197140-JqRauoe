@@ -9,30 +9,52 @@
   <body class="mixpanel-platform-body">
     <div class="mixpanel-platform-section">
       <div id="dateSelect"></div>
+      <div id="dateBucket"></div>
       <div id="graph"></div>
     </div>
     <div id="table"></div>
     <script>
       var dateSelect  = $('#dateSelect').MPDatepicker();
       var eventGraph  = $('#graph').MPChart({chartType: 'line'});
+      
+      
+      var bucketOptions = {
+        items: [
+          {label: 'Hour', value: 'hour'},
+          {label: 'Day', value: 'day'},
+          {label: 'Week', value: 'week'},
+          {label: 'Month', value: 'month'}
+          
+        ]
+      };
+      
+      var bucketDropdown = $('#dateBucket').MPSelect(bucketOptions);
 
       var runQuery = function() {
         var dateRange = dateSelect.MPDatepicker('value');
+        var pickedUnit = bucketDropdown.MPSelect('value');
+        
+        console.log(dateRange)
+        
         var params = {
           formulas:[{"queries": [{"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"show_invite_or_pay_cta\"] == true and properties[\"is_freemail\"] == true"}, {"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"is_freemail\"] == true"}], "formula": "(A)/(B)"}],
-          from_date:'2015-01-16',
-          to_date:'2015-05-29',
-          unit:'day'
+          from_date:dateRange.from,
+          to_date:dateRange.to,
+          unit:pickedUnit
         };
 
         MP.api.query('api/2.0/formulas', params).done(function(results) {
-          eventGraph.MPChart('setData', results);
+          console.log(results);
+          // eventGraph.MPChart('setData', results);
         });
 
       };
       
       runQuery();
+      
       dateSelect.on('change', runQuery);
+      bucketDropdown.on('change', runQuery);
+      
     </script>
   </body>
 </html>
