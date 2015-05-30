@@ -8,14 +8,20 @@
   </head>
   <body class="mixpanel-platform-body">
     <div class="mixpanel-platform-section">
+      <div id="funneldateSelect"></div>
+      <div id="funneldateBucket"></div>
+      <div id="funnelgraph"></div>
+    </div>
+    <div class="mixpanel-platform-section">
       <div id="dateSelect"></div>
       <div id="dateBucket"></div>
       <div id="graph"></div>
     </div>
-    <div id="table"></div>
     <script>
-      var dateSelect  = $('#dateSelect').MPDatepicker();
-      var eventGraph  = $('#graph').MPChart({chartType: 'line'});
+    
+    // Create Selectors for Formulas 
+      var dateSelect  = $('#funneldateSelect').MPDatepicker();
+      var eventGraph  = $('#funnelgraph').MPChart({chartType: 'line'});
       
       
       var bucketOptions = {
@@ -28,17 +34,23 @@
         ]
       };
       
-      var bucketDropdown = $('#dateBucket').MPSelect(bucketOptions);
+      var bucketDropdown = $('#funneldateBucket').MPSelect(bucketOptions);
       
+      
+      // Convert Dates to proper formats from selector
       var cleanDate = function(date) {
         return date.toISOString().substring(0, date.toISOString().indexOf('T'));
       };
 
-      var runQuery = function() {
+      // Runs Formula Query
+      var runFormulaQuery = function() {
+        
+        // Grab current values of the date picker and bucket drop down
         var dateRange = dateSelect.MPDatepicker('value');
         var pickedUnit = bucketDropdown.MPSelect('value');
         
-        
+        // Create paramaters for the request. The formulas value can be grabbed from the XHR request within 
+        // the original bookmarked report
         var params = {
           formulas:[{"queries": [{"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"show_invite_or_pay_cta\"] == true and properties[\"is_freemail\"] == true"}, {"events": ["Notification Sent - Extension"], "count_type": "unique", "selector": "properties[\"is_freemail\"] == true"}], "formula": "(A)/(B)"}],
           from_date:cleanDate(dateRange.from),
@@ -46,16 +58,18 @@
           unit:pickedUnit
         };
 
+        // Makes the actual query
         MP.api.query('api/2.0/formulas', params).done(function(results) {
-          eventGraph.MPChart('setData', results);
+          console.log(results.data.values);
+          eventGraph.MPChart('setData', {'Formula':results.data.values[0]});
         });
 
       };
       
-      runQuery();
-      
-      dateSelect.on('change', runQuery);
-      bucketDropdown.on('change', runQuery);
+      runFormulaQuery();
+      // Re-run the forumlas query if any changes are made to the date picker or time bucket
+      dateSelect.on('change', runFormulaQuery);
+      bucketDropdown.on('change', runFormulaQuery);
       
     </script>
   </body>
